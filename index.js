@@ -2,7 +2,9 @@ const MongoClient=require('mongodb').MongoClient;
 const assert=require('assert');
 
 const url= 'mongodb://localhost:27017/';
-const dbname='conFusion';
+const dbname='GoodGoing';
+
+const dboper=require('./operation');
 
 MongoClient.connect(url,(err,client)=>{
 
@@ -11,24 +13,30 @@ MongoClient.connect(url,(err,client)=>{
     console.log("Connected with Mongo Server Sucessfully");
 
     const db=client.db(dbname);
-    const collection=db.collection('dishes');
+    const collection=db.collection('ls');
 
-    collection.insertOne({
-         "name":"Gujia",
-         "description":"On Diwali Available"},(err,result)=>{
-            assert.equal(err,null);  
+    dboper.insertDocument(db,{name:"Gaurang",description:"Raju bhandari"},"ls",(result)=>{
+        console.log("Insert",result.ops);
 
-            console.log("Insertion done:"+result.ops);
+        dboper.findDocument(db,'ls',(docs)=>{
+            console.log('Found Doc',docs);
 
-            collection.find({}).toArray((err,docs)=>{
-                assert.equal(err,null);
-             
-                console.log("Found done:"+docs);
+            dboper.updateDocument(db, { name: "Gaurang" },
+                    { description: "Updated Test" }, "ls",
+                    (result) => {
+                        console.log("Updated Document:\n", result.result);
 
-                db.dropCollection('dishes',(err,result)=>{
-                    assert.equal(err,null);
-                    client.close();
-                });
-            });
-         });
-});
+                        dboper.findDocument(db, "ls", (docs) => {
+                            console.log("Found Updated Documents:\n", docs);
+                            
+                            db.dropCollection("ls", (result) => {
+                                console.log("Dropped Collection: ", result);
+
+                                client.close();
+                            });
+                        });
+                    });
+        });
+    });
+    
+    });
